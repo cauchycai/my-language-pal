@@ -1,0 +1,181 @@
+* My Language Pal
+:PROPERTIES:
+:CREATED:  [2023-10-29 Sun 14:53]
+:END:
+** my-language-pal-wechat-app application
+
+*** Installation
+:PROPERTIES:
+:CREATED:  [2023-10-29 Sun 14:04]
+:END:
+
+On cl-sh-1:
+
+#+BEGIN_SRC sh
+cd /opt/my-language-pal/wechatapp
+# Create a virtual environment for the app
+python3 -m venv .venv
+# activate the virtual environment
+. .venv/bin/activate
+#+END_SRC
+
+
+After running the "activate" command, the shell prompt has a prefix "(.venv) ", showing that it's in the venv environment:
+#+BEGIN_EXAMPLE
+ubuntu@VM-4-6-ubuntu:/opt/my-language-pal/wechatapp$ . .venv/bin/activate
+(.venv) ubuntu@VM-4-6-ubuntu:/opt/my-language-pal/wechatapp$
+#+END_EXAMPLE
+
+Now, install the application itself and "waitress":
+
+#+BEGIN_SRC sh
+pip install .
+pip install waitress
+#+END_SRC
+
+
+*** Running
+:PROPERTIES:
+:CREATED:  [2023-10-29 Sun 14:04]
+:END:
+
+
+#+BEGIN_SRC sh
+cd /opt/my-language-pal/wechatapp
+waitress-serve --host 0.0.0.0 flask_wechat:app
+#+END_SRC
+
+*** Use nginx to accept requests at port 80 and forward the requests to the wechatapp application
+:PROPERTIES:
+:CREATED:  [2023-10-29 Sun 15:48]
+:END:
+
+Install nginx server:
+
+
+
+*** Test the API
+:PROPERTIES:
+:CREATED:  [2023-10-29 Sun 15:20]
+:END:
+
+Enable the 8080 port in the firewall rules for cl-sh-1, then test whether the port is accessible:
+
+#+BEGIN_SRC sh
+nc -zv 124.222.229.246 8080
+#+END_SRC
+
+#+RESULTS:
+Connection to 124.222.229.246 port 8080 [tcp/http-alt] succeeded!
+[ Babel evaluation exited with code 0 ]
+
+
+#+BEGIN_SRC python :session 2023-10-29 :results output
+import requests
+import json
+
+
+#+END_SRC
+
+
+
+
+** my-language-pal-chatgptproxy application
+:PROPERTIES:
+:CREATED:  [2023-10-29 Sun 14:53]
+:END:
+*** Installation
+:PROPERTIES:
+:CREATED:  [2023-10-29 Sun 14:54]
+:END:
+
+On cl-us-1:
+
+#+BEGIN_SRC sh
+sudo apt install python3.10-venv
+#+END_SRC
+
+#+BEGIN_SRC sh
+cd /opt/my-language-pal/chatgptproxy
+# Create a virtual environment for the app
+python3 -m venv .venv
+# activate the virtual environment
+. .venv/bin/activate
+#+END_SRC
+
+
+Check the created venv:
+#+BEGIN_EXAMPLE
+(.venv) cl@localhost:/opt/my-language-pal/chatgptproxy$ which pip
+/opt/my-language-pal/chatgptproxy/.venv/bin/pip
+#+END_EXAMPLE
+
+
+#+BEGIN_SRC sh
+pip install .
+pip install waitress
+#+END_SRC
+*** Running
+:PROPERTIES:
+:CREATED:  [2023-10-29 Sun 15:03]
+:END:
+
+
+#+BEGIN_SRC sh
+cd /opt/my-language-pal/chatgptproxy
+export OPENAI_API_KEY=xxxxxxxxxxxxxxx
+waitress-serve --host 0.0.0.0 flask_chatgptproxy:app
+#+END_SRC
+
+
+#+BEGIN_EXAMPLE
+(.venv) cl@localhost:/opt/my-language-pal/chatgptproxy$ waitress-serve --host 0.0.0.0 flask_chatgptproxy:app
+INFO:waitress:Serving on http://0.0.0.0:8080
+#+END_EXAMPLE
+
+*** Test the API
+:PROPERTIES:
+:CREATED:  [2023-10-29 Sun 15:05]
+:END:
+
+Test whether the port is accessible:
+
+#+BEGIN_SRC sh
+nc -zv 143.42.167.62 8080
+#+END_SRC
+
+#+RESULTS:
+: Connection to 143.42.167.62 port 8080 [tcp/http-alt] succeeded!
+: [ Babel evaluation exited with code 0 ]
+
+
+#+BEGIN_SRC python :session 2023-10-29 :results output
+import requests
+import json
+
+
+data = {
+    'model': 'gpt-4',
+    'messages': [
+        {
+            'role': 'system',
+            'content': 'You will be provided with sentences, and your task is to help them sound natural in English.'
+        },
+        {
+            'role': 'user',
+            'content': 'The system will fetch the tracking information of orders and return the trackings to the Amazon stores by Amazon API.'
+        }
+    ],
+    'temperature': 0,
+    'max_tokens': 256
+}
+
+response = requests.post(
+    'http://143.42.167.62:8080/openai/chat_completion/create',
+    json=data
+)
+print(response.text)
+#+END_SRC
+
+#+RESULTS:
+: {"choices":[{"finish_reason":"stop","index":0,"message":{"content":"The system will retrieve the tracking information for orders and relay this information back to the Amazon stores via the Amazon API.","role":"assistant"}}],"created":1698563412,"id":"chatcmpl-8EuE0rmSMBNvPEhyzBhccPybpAHXL","model":"gpt-4-0613","object":"chat.completion","usage":{"completion_tokens":23,"prompt_tokens":52,"total_tokens":75}}
